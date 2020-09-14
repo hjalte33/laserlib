@@ -1,21 +1,6 @@
 
-$flatPack = true;
-$spaceing = 2;
-
-flatPack(x = 0 , sizes=[110,100,200]){
-    lasercutout2(th = 5, points = [[0,0],[100,0],[100,100],[0,100]],pos=[10,0,40],ang=[90,0,0]){
-        testing();
-    }
-
-    lasercutout2(th = 5, points = [[0,0],[100,0],[100,100],[0,100]],pos=[10,0,30],adderChildren=[]){
-        *testing(0,30);
-        fingers(angle=0, start_up=1, fingers=5, thickness=5, range_min=0, range_max=100, t_x=0, t_y=0, bumps = false);
-        
-    }
-    lasercutout2(th = 5, points = [[0,0],[50,0],[100,100],[0,100]],pos=[10,0,30],ang=[0,-90,0]){
-    }
-}
-
+//ToDo remove this 
+kerf = 0;
 
 /*
 slice slices an array from start to end. 
@@ -52,39 +37,185 @@ passing it in.
 
 spaceing = float  --> space between the parts. 
 */
-module flatPack(x = 0, sizes=[], spaceing = 2){
-    for(i=[0:1:$children-1]){
-        $pos = [x,add(sizes,0,i)+i*spaceing,0];
-        children(i);
-    }
-}
-
-
-module lasercutoutSquare2(th = th,size=[100,100], pos = [0,0,0], ang = [0,0,0]){
-    points = [[0,0], [size[0],0], [size[0],size[1]], [0,size[1]], [0,0]];
-    lasercutout2(th = th, points = points, pos = pos, ang = ang){
+module llFlatPack(x = 0, sizes=[], spaceing = 2){
+    if ($flatPack){
+        projection(cut = false)
+        for(i=[0:1:$children-1]){
+            $pos = [x,add(sizes,0,i)+i*spaceing,0];
+            children(i);
+        }
+    } else{
+        $pos = 0;   
         children();
     }
 }
 
-module lasercutout2(th, points = [], pos = [0,0,0], ang = [0,0,0],adderChildren=[]){
+
+module llCutoutSquare(th = th,size=[100,100], pos = [0,0,0], ang = [0,0,0],adderChildren=[]){
+    points = [[0,0], [size[0],0], [size[0],size[1]], [0,size[1]], [0,0]];
+    llCutout(th = th, points = points, pos = pos, ang = ang,adderChildren=[]){
+        children();
+    }
+}
+
+module llCutout(th, points = [], pos = [0,0,0], ang = [0,0,0],adderChildren=[]){
     pos = $flatPack ? $pos    : pos;
     ang = $flatPack ? [0,0,0] : ang;
     $th = th;   
     
+    // Put the cutout into position 
     translate(pos) rotate(ang){
+        // Extrude the cutout shape and substract all the children not marked 
+        // as adding children 
         difference(){
             linear_extrude(height = th , center = false)  polygon(points=points);
             for(i=[0:1:$children-1]) if ( ! search(i,adderChildren)){
                 children(i);
             }
         }
+        // Add all the adder children
         for(i = adderChildren) children(i);
 
     }
     
 }
 
-module testing(x=0, y=0,z=0){
+module llTest(x=0, y=0,z=0){
     translate([x,y,z]) cube([100,50,10]);
+}
+
+
+module llFingers(startPos, angle, length, nFingers = 0, edge = false, startCon = 0, holeWidth = 0, kerf = 0.1){
+
+    // Calculate the end Position
+    endPos = [[cos(angle)*length,        0          ,0],
+              [       0         , sin(angle)*length ,0]] * startPos;
+
+    // Width of fingers. Set the holewidth to the material thikness if nothing else specified. 
+    wF = holeWidth ? holeWidth : $th;
+    
+    // number of fingers
+    nF = nFingers ? nFingers : floor(length/20); // gives between 10 and 20 mm length tabs
+
+    // length of fingers
+    lF = length/nF/2.0;
+    echo(lF);
+
+    // Half kerf
+    hkerf = kerf/2;
+
+    holeFaces = [
+        [0,1,2,3],  // bottom
+        [4,5,1,0],  // front
+        [7,6,5,4],  // top
+        [5,6,2,1],  // right
+        [6,7,3,2],  // back
+        [7,4,0,3]]; // left     
+  
+    holePoints = [[ hkerf   ,  hkerf    ,     -1 ],  //0
+                  [ lF-kerf ,  hkerf    ,     -1 ],  //1
+                  [ lF-kerf ,  wF-kerf  ,     -1 ],  //2
+                  [ hkerf   ,  wF-kerf  ,     -1 ],  //3
+                  [ hkerf   ,  hkerf    ,  $th+1 ],  //4
+                  [ lF-kerf ,  hkerf    ,  $th+1 ],  //5
+                  [ lF-kerf ,  wF-kerf  ,  $th+1 ],  //6
+                  [ hkerf   ,  wF-kerf  ,  $th+1 ]]; //7
+    
+    edgeHolePoints = [[ hkerf   ,  -hkerf  ,     -1 ],  //0
+                      [ lF-kerf ,  -hkerf  ,     -1 ],  //1
+                      [ lF-kerf ,  wF-kerf ,     -1 ],  //2
+                      [ hkerf   ,  wF-kerf ,     -1 ],  //3
+                      [ hkerf   ,  -hkerf  ,  $th+1 ],  //4
+                      [ lF-kerf ,  -hkerf  ,  $th+1 ],  //5
+                      [ lF-kerf ,  wF-kerf ,  $th+1 ],  //6
+                      [ hkerf   ,  wF-kerf ,  $th+1 ]]; //7
+
+    // Hole punching rutine
+    module punchHoles(){
+        for(i=[0:nF]){
+            translate([i*lF*2,0]){
+                if (edge) {polyhedron(edgeHolePoints,holeFaces);}
+                else {polyhedron(holePoints,holeFaces);}
+            }
+        }
+    }
+
+    // take care of the different starting conditions.
+    if (startCon == 0){
+        // take care of the first littel kerf left over on the edge
+        if(edge) translate([0,0,-1])cube([kerf,wF,th+1]);
+        translate(startPos) rotate([0,0,angle]) punchHoles();
+    }
+    else if(startCon == 1){
+        translate(startPos+[lF/2,0,0]) rotate([0,0,angle]) punchHoles();
+    }
+    else if(startCon == 2){
+        // take care of the last littel kerf left over on the edge
+        if (edge) translate([length-kerf,0,-1])cube([kerf,wF,th+1]);
+        // punch the holes
+        translate(startPos+[lF,0,0]) rotate([0,0,angle]) punchHoles();
+
+    }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module fingers(angle, start_up, fingers, thickness, range_min, range_max, t_x, t_y, bumps = false)
+{
+
+    // The tweaks to y translate([0, -thickness,0]) ... thickness*2 rather than *1
+    // Are to avoid edge cases and make the dxf export better.
+    // All fun
+    translate([t_x, t_y,0]) rotate([0,0,angle]) translate([0, -thickness,0])
+    {
+        for ( p = [ 0 : 1 : fingers-1] )
+		{
+		
+			kerfSize = (p > 0) ? kerf/2 : kerf/2 ;
+			kerfMove = (p > 0) ? kerf/4 : 0;
+			
+			i=range_min + ((range_max-range_min)/fingers)*p;
+            if(start_up == 1) 
+            {
+			
+                translate([i-kerfMove,0,0]) 
+                {
+                    cube([ (range_max-range_min)/(fingers*2) + kerfSize, thickness*2, thickness]);
+                    if(bumps == true)
+                    {
+                        translate([(range_max-range_min)/(fingers*2), thickness*1.5, 0]) cylinder(h=thickness, r=thickness/10);
+                    }
+                }
+            }
+            else 
+            {
+                translate([i+(range_max-range_min)/(fingers*2)-kerfMove,0,0]) 
+                {
+                    cube([ (range_max-range_min)/(fingers*2)+kerfSize, thickness*2, thickness]);
+                    if(bumps == true)
+                    {
+                        if (i < (range_max - (range_max-range_min)/fingers ))
+                        {
+                            translate([(range_max-range_min)/(fingers*2), thickness*1.5, 0]) cylinder(h=thickness, r=thickness/10);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
