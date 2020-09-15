@@ -80,29 +80,114 @@ module llCutout(th, points = [], pos = [0,0,0], ang = [0,0,0],adderChildren=[]){
     
 }
 
-module llTest(x=0, y=0,z=0){
-    translate([x,y,z]) cube([100,50,10]);
-}
 
-
-module llFingers(startPos, angle, length, nFingers = 0, edge = false, startCon = 0, holeWidth = 0, kerf = 0.1){
+module llFingers(startPos, angle, length, nFingers = 0,inverse = false, edge = false, startCon = 13, holeWidth = 0, kerf = 0.1,specialWidths=[]){
 
     // Calculate the end Position
     endPos = [[cos(angle)*length,        0          ,0],
               [       0         , sin(angle)*length ,0]] * startPos;
 
     // Width of fingers. Set the holewidth to the material thikness if nothing else specified. 
-    wF = holeWidth ? holeWidth : $th;
+    wH = holeWidth ? holeWidth : $th;
     
     // number of fingers
-    nF = nFingers ? nFingers : floor(length/20); // gives between 10 and 20 mm length tabs
-
-    // length of fingers
-    lF = length/nF/2.0;
-    echo(lF);
+    nH = nFingers ? nFingers : floor(length/20); // should give approx between 10 and 20 mm length tabs
+    echo(nH);
 
     // Half kerf
     hkerf = kerf/2;
+
+    //
+    sW = specialWidths ? specialWidths : [wH,wH];
+
+
+    module holes(){
+        // take care of the different starting conditions.
+        if (startCon == 11){
+            lH = length/(nH*2-1);
+            translate(startPos) punchHoles(nH,lH,wH,kerf,edge); 
+            // Lastly take care of the first and last littel kerf left over on the edge
+            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,$th+2]);
+            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,th+2]);
+        }
+        else if (startCon == 12){
+            lH = (length-sW[1]) / (nH*2-1);
+            translate(startPos) punchHoles(nH,lH,wH,kerf,edge); 
+            
+            // Lastly take care of the first littel kerf left over on the edge
+            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,$th+2]);
+        }
+
+        else if (startCon == 13){
+            lH = (length) / (nH*2);
+            translate(startPos) punchHoles(nH,lH,wH,kerf,edge);  
+            // Lastly take care of the first littel kerf left over on the edge
+            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,$th+2]);
+        }
+        else if (startCon == 21){
+            lH = (length-sW[0]) / (nH*2-1);
+            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,kerf,edge); 
+            // Lastly take care of the last littel kerf left over on the edge
+            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([kerf,wH*2-kerf,th+2]);
+        }
+        else if (startCon == 22){
+            lH = (length-sW[0]-sW[1]) / (nH*2-1);
+            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,kerf,edge); 
+            // Lastly take care of the last littel kerf left over on the edge
+            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([kerf,wH*2-kerf,th+2]);
+        }
+        else if (startCon == 23){
+            lH = (length-sW[0]) / (nH*2);
+            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,kerf,edge); 
+            // Lastly take care of the last littel kerf left over on the edge
+            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([kerf,wH*2-kerf,th+2]);
+        }
+        else if (startCon == 31){
+            lH = length/(nH*2);
+            translate(startPos+[lH,0,0]) punchHoles(nH,lH,wH,kerf,edge); 
+            // Lastly take care of the first and last littel kerf left over on the edge
+            if(edge) translate([-kerf,-wH+hkerf,-1]+ [lH,0,0])cube([kerf,wH*2-kerf,$th+2]);
+            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1]+ [lH,0,0])cube([kerf,wH*2-kerf,th+2]);
+        }
+        else if (startCon == 32){
+            lH = (length-sW[0]) / (nH*2);
+            translate(startPos + [lH,0,0]) punchHoles(nH,lH,wH,kerf,edge); 
+            // Lastly take care of the first littel kerf left over on the edge
+            if(edge) translate([-kerf,-wH+hkerf,-1] + [lH,0,0])cube([kerf,wH*2-kerf,$th+2]);
+        }
+        else if (startCon == 33){
+            lH = (length) / (nH*2+1);
+            translate(startPos + [lH,0,0]) punchHoles(nH,lH,wH,kerf,edge);  
+            // Lastly take care of the first littel kerf left over on the edge
+            if(edge) translate([-kerf,-wH+hkerf,-1] + [lH,0,0])cube([kerf,wH*2-kerf,$th+2]);
+        }
+        else if(startCon == 44){
+            lH = (length) / (nH*2);
+            translate(startPos+[lH/2,0,0]) punchHoles(nH,lH,wH,kerf,edge);
+        }
+        else{
+            assert(false, "invalid start condition on fingerjoints");
+        }
+    }
+
+    rotate([0,0,angle]) {
+        if(inverse){
+            difference(){
+                translate(startPos + [0,-wH+hkerf,-1]) cube([length, wH*2-kerf, $th+2]); 
+                    
+                holes();
+            }
+        } else{
+            holes();
+        }
+    }
+    
+
+}
+
+// Hole punching rutine
+module punchHoles(nH,lH,wH,kerf,edge, bumps=false){
+    hkerf=kerf/2;
 
     holeFaces = [
         [0,1,2,3],  // bottom
@@ -111,53 +196,36 @@ module llFingers(startPos, angle, length, nFingers = 0, edge = false, startCon =
         [5,6,2,1],  // right
         [6,7,3,2],  // back
         [7,4,0,3]]; // left     
-  
-    holePoints = [[ hkerf   ,  hkerf    ,     -1 ],  //0
-                  [ lF-kerf ,  hkerf    ,     -1 ],  //1
-                  [ lF-kerf ,  wF-kerf  ,     -1 ],  //2
-                  [ hkerf   ,  wF-kerf  ,     -1 ],  //3
-                  [ hkerf   ,  hkerf    ,  $th+1 ],  //4
-                  [ lF-kerf ,  hkerf    ,  $th+1 ],  //5
-                  [ lF-kerf ,  wF-kerf  ,  $th+1 ],  //6
-                  [ hkerf   ,  wF-kerf  ,  $th+1 ]]; //7
-    
-    edgeHolePoints = [[ hkerf   ,  -hkerf  ,     -1 ],  //0
-                      [ lF-kerf ,  -hkerf  ,     -1 ],  //1
-                      [ lF-kerf ,  wF-kerf ,     -1 ],  //2
-                      [ hkerf   ,  wF-kerf ,     -1 ],  //3
-                      [ hkerf   ,  -hkerf  ,  $th+1 ],  //4
-                      [ lF-kerf ,  -hkerf  ,  $th+1 ],  //5
-                      [ lF-kerf ,  wF-kerf ,  $th+1 ],  //6
-                      [ hkerf   ,  wF-kerf ,  $th+1 ]]; //7
 
-    // Hole punching rutine
-    module punchHoles(){
-        for(i=[0:nF]){
-            translate([i*lF*2,0]){
-                if (edge) {polyhedron(edgeHolePoints,holeFaces);}
-                else {polyhedron(holePoints,holeFaces);}
-            }
+    holePoints = [[ hkerf   ,  hkerf    ,     -1 ],  //0
+                  [ lH-kerf ,  hkerf    ,     -1 ],  //1
+                  [ lH-kerf ,  wH-kerf  ,     -1 ],  //2
+                  [ hkerf   ,  wH-kerf  ,     -1 ],  //3
+                  [ hkerf   ,  hkerf    ,  $th+1 ],  //4
+                  [ lH-kerf ,  hkerf    ,  $th+1 ],  //5
+                  [ lH-kerf ,  wH-kerf  ,  $th+1 ],  //6
+                  [ hkerf   ,  wH-kerf  ,  $th+1 ]]; //7
+    
+    // double widths make the rotation easier. 
+    edgeHolePoints = [[ hkerf   ,  -wH+hkerf ,     -1 ],  //0
+                      [ lH-kerf ,  -wH+hkerf ,     -1 ],  //1
+                      [ lH-kerf ,  wH-kerf   ,     -1 ],  //2
+                      [ hkerf   ,  wH-kerf   ,     -1 ],  //3
+                      [ hkerf   ,  -wH+hkerf ,  $th+1 ],  //4
+                      [ lH-kerf ,  -wH+hkerf ,  $th+1 ],  //5
+                      [ lH-kerf ,  wH-kerf   ,  $th+1 ],  //6
+                      [ hkerf   ,  wH-kerf   ,  $th+1 ]]; //7
+
+
+    for(i=[0:nH-1]){ 
+        translate([i*lH*2,0]){
+            if (edge) {polyhedron(edgeHolePoints,holeFaces);}
+            else {polyhedron(holePoints,holeFaces);}
         }
     }
 
-    // take care of the different starting conditions.
-    if (startCon == 0){
-        // take care of the first littel kerf left over on the edge
-        if(edge) translate([0,0,-1])cube([kerf,wF,th+1]);
-        translate(startPos) rotate([0,0,angle]) punchHoles();
-    }
-    else if(startCon == 1){
-        translate(startPos+[lF/2,0,0]) rotate([0,0,angle]) punchHoles();
-    }
-    else if(startCon == 2){
-        // take care of the last littel kerf left over on the edge
-        if (edge) translate([length-kerf,0,-1])cube([kerf,wF,th+1]);
-        // punch the holes
-        translate(startPos+[lF,0,0]) rotate([0,0,angle]) punchHoles();
-
-    }
-
 }
+
 
 
 

@@ -6,27 +6,28 @@ $flatPack = true;  // Toggle for whether or not to flatpack you build
 $spaceing = 2;     // When flatpacking 
 
 myWidth = 100;
-my height = 115;
+myDepth = 200;
+myHeight = 115;
 
 
-llFlatPack(x = 0 , sizes=[110,100,200]){
+llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
+    // bottom
+    llCutoutSquare(th = th, size=[myWidth,myDepth], pos=[0,0,0]){
+        llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge=true,startCon=31, inverse = true);
+        llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge=true, startCon=22, inverse = true);
+    }
 
     // front
-    llCutoutSquare(th = 5, size=[100,100],pos=[10,0,40],ang=[90,0,0]){
-        llFingers(startPos = [0,0,0], angle = 0, length = 100,edge=true, startCon=2);
-        llFingers(startPos = [0,50,0], angle = 0, length = 100,edge=true, startCon=1);
+    llCutoutSquare(th = th, size=[myWidth,myHeight],pos=[0,th,0],ang=[90,0,0]){
+        llFingers(startPos = [0,0,0], angle = 0, length = myWidth,edge=true, startCon=31,inverse = false);
+        llFingers(startPos = [0,50,0], angle = 0, length = myWidth,edge=false, startCon=33);
+        llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge=true, startCon=31);
     }
 
-    // back
-
-    llCutout(th = 5, points = [[0,0],[100,0],[100,100],[0,100]],pos=[10,0,30],adderChildren=[]){
-        *llTest(0,30);
-        fingers(angle=0, start_up=0, fingers=6, thickness=5, range_min=0, range_max=100, t_x=0, t_y=0, bumps = false);
-        fingers(angle=90, start_up=0, fingers=6, thickness=5, range_min=0, range_max=100, t_x=0, t_y=0, bumps = false);
-        fingers(angle=-90, start_up=0, fingers=6, thickness=5, range_min=0, range_max=100, t_x=100, t_y=100, bumps = false);
-        
-    }
-    llCutout(th = 5, points = [[0,0],[50,0],[100,100],[0,100]],pos=[10,0,30],ang=[0,-90,0]){
+    // side1
+    llCutoutSquare(th = th, size=[myHeight,myDepth],pos=[th,0,0],ang=[0,-90,0]){
+        llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge=true);
+        llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = true,startCon=22);
     }
 }
 
