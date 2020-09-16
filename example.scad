@@ -2,36 +2,36 @@ include <laserlib.scad>;
 
 th = 6; // thikness
 
-$flatPack = true;  // Toggle for whether or not to flatpack you build
+$flatPack = false;  // Toggle for whether or not to flatpack you build
 $spaceing = 2;     // When flatpacking 
 
 myWidth = 100;
-myDepth = 200;
+myDepth = 123;
 myHeight = 145;
 
 
 llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
     // bottom
     llCutoutSquare(th = th, size=[myWidth,myDepth], pos=[0,0,0]){
-        llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge=true,startCon=31, inverse = true);
-        llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge=true, startCon=22, inverse = true);
+        llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge=true,startCon=[2,0], inverse = false);
+        llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge=true, startCon=[2,2], inverse = false);
     }
 
     // front
     llCutoutSquare(th = th, size=[myWidth,myHeight],pos=[0,th,0],ang=[90,0,0]){
-        #llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge=true, startCon=31,inverse = false);
-        llFingers(startPos = [0,50,0], angle = 0, length = myWidth,edge=false, startCon=33);
-        llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge=true, startCon=31);
+        #llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge=true, startCon=[2,0],inverse = true);
+        llFingers(startPos = [0,50,0], angle = 0, length = myWidth,edge=false, startCon=[2,2]);
+        llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge=true, startCon=[2,0]);
     }
 
     // side1
-    llCutoutSquare(th = th, size=[myHeight,myDepth],pos=[th,0,0],ang=[0,-90,0]){
+   * llCutoutSquare(th = th, size=[myHeight,myDepth],pos=[th,0,0],ang=[0,-90,0]){
         llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge=true);
         llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = true,startCon=22);
     }
 
     // test
-    anotherPice();
+    *anotherPice();
 }
 
 module testPice(){
