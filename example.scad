@@ -7,7 +7,7 @@ $spaceing = 2;     // When flatpacking
 
 myWidth = 100;
 myDepth = 200;
-myHeight = 115;
+myHeight = 145;
 
 
 llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
@@ -19,7 +19,7 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
 
     // front
     llCutoutSquare(th = th, size=[myWidth,myHeight],pos=[0,th,0],ang=[90,0,0]){
-        llFingers(startPos = [0,0,0], angle = 0, length = myWidth,edge=true, startCon=31,inverse = false);
+        #llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge=true, startCon=31,inverse = false);
         llFingers(startPos = [0,50,0], angle = 0, length = myWidth,edge=false, startCon=33);
         llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge=true, startCon=31);
     }
@@ -29,6 +29,9 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
         llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge=true);
         llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = true,startCon=22);
     }
+
+    // test
+    anotherPice();
 }
 
 module testPice(){
@@ -42,7 +45,6 @@ module testPice(){
 
 module anotherPice(){
     llCutout(th = th, points = [[0,0],[0,100],[100,50],[100,0]], pos = [0,0], ang = [0,0]){
-        fingerjoints(side = DOWN, type = INSIDE, count = 5);
     }
 }
 

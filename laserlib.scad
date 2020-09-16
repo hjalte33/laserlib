@@ -1,6 +1,6 @@
 
-//ToDo remove this 
-kerf = 0;
+
+$kerf = 0.1;
 
 /*
 slice slices an array from start to end. 
@@ -81,21 +81,22 @@ module llCutout(th, points = [], pos = [0,0,0], ang = [0,0,0],adderChildren=[]){
 }
 
 
-module llFingers(startPos, angle, length, nFingers = 0,inverse = false, edge = false, startCon = 13, holeWidth = 0, kerf = 0.1,specialWidths=[]){
-
+module llFingers(startPos, angle, length, endPos=[], nFingers = 0,inverse = false, edge = false, startCon = 13, holeWidth = 0, specialWidths=[]){
+    
     // Calculate the end Position
-    endPos = [[cos(angle)*length,        0          ,0],
-              [       0         , sin(angle)*length ,0]] * startPos;
+    length = length ? length : sqrt(pow(endPos[0]-startPos[0],2)+pow(endPos[1]-startPos[1],2));
+    angle = angle!=undef ? angle : atan2(endPos[1]-startPos[1],endPos[0]-startPos[0]);
+    echo(angle);
+
 
     // Width of fingers. Set the holewidth to the material thikness if nothing else specified. 
     wH = holeWidth ? holeWidth : $th;
     
     // number of fingers
     nH = nFingers ? nFingers : floor(length/20); // should give approx between 10 and 20 mm length tabs
-    echo(nH);
 
-    // Half kerf
-    hkerf = kerf/2;
+    // Half $kerf
+    hkerf = $kerf/2;
 
     //
     sW = specialWidths ? specialWidths : [wH,wH];
@@ -105,65 +106,65 @@ module llFingers(startPos, angle, length, nFingers = 0,inverse = false, edge = f
         // take care of the different starting conditions.
         if (startCon == 11){
             lH = length/(nH*2-1);
-            translate(startPos) punchHoles(nH,lH,wH,kerf,edge); 
-            // Lastly take care of the first and last littel kerf left over on the edge
-            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,$th+2]);
-            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,th+2]);
+            translate(startPos) punchHoles(nH,lH,wH,$kerf,edge); 
+            // Lastly take care of the first and last littel $kerf left over on the edge
+            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([$kerf*2,wH*2-$kerf,$th+2]);
+            if(edge) translate([(nH*lH*2-lH)-$kerf,-wH+hkerf,-1])cube([$kerf*2,wH*2-$kerf,th+2]);
         }
         else if (startCon == 12){
             lH = (length-sW[1]) / (nH*2-1);
-            translate(startPos) punchHoles(nH,lH,wH,kerf,edge); 
+            translate(startPos) punchHoles(nH,lH,wH,$kerf,edge); 
             
-            // Lastly take care of the first littel kerf left over on the edge
-            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,$th+2]);
+            // Lastly take care of the first littel $kerf left over on the edge
+            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([$kerf*2,wH*2-$kerf,$th+2]);
         }
 
         else if (startCon == 13){
             lH = (length) / (nH*2);
-            translate(startPos) punchHoles(nH,lH,wH,kerf,edge);  
-            // Lastly take care of the first littel kerf left over on the edge
-            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([kerf*2,wH*2-kerf,$th+2]);
+            translate(startPos) punchHoles(nH,lH,wH,$kerf,edge);  
+            // Lastly take care of the first littel $kerf left over on the edge
+            if(edge) translate([-hkerf,-wH+hkerf,-1])cube([$kerf*2,wH*2-$kerf,$th+2]);
         }
         else if (startCon == 21){
             lH = (length-sW[0]) / (nH*2-1);
-            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,kerf,edge); 
-            // Lastly take care of the last littel kerf left over on the edge
-            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([kerf,wH*2-kerf,th+2]);
+            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,$kerf,edge); 
+            // Lastly take care of the last littel $kerf left over on the edge
+            if(edge) translate([(nH*lH*2-lH)-$kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([$kerf,wH*2-$kerf,th+2]);
         }
         else if (startCon == 22){
             lH = (length-sW[0]-sW[1]) / (nH*2-1);
-            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,kerf,edge); 
-            // Lastly take care of the last littel kerf left over on the edge
-            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([kerf,wH*2-kerf,th+2]);
+            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,$kerf,edge); 
+            // Lastly take care of the last littel $kerf left over on the edge
+            if(edge) translate([(nH*lH*2-lH)-$kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([$kerf,wH*2-$kerf,th+2]);
         }
         else if (startCon == 23){
             lH = (length-sW[0]) / (nH*2);
-            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,kerf,edge); 
-            // Lastly take care of the last littel kerf left over on the edge
-            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([kerf,wH*2-kerf,th+2]);
+            translate(startPos + [sW[0],0,0]) punchHoles(nH,lH,wH,$kerf,edge); 
+            // Lastly take care of the last littel $kerf left over on the edge
+            if(edge) translate([(nH*lH*2-lH)-$kerf,-wH+hkerf,-1] + [sW[0],0,0])cube([$kerf,wH*2-$kerf,th+2]);
         }
         else if (startCon == 31){
             lH = length/(nH*2);
-            translate(startPos+[lH,0,0]) punchHoles(nH,lH,wH,kerf,edge); 
-            // Lastly take care of the first and last littel kerf left over on the edge
-            if(edge) translate([-kerf,-wH+hkerf,-1]+ [lH,0,0])cube([kerf,wH*2-kerf,$th+2]);
-            if(edge) translate([(nH*lH*2-lH)-kerf,-wH+hkerf,-1]+ [lH,0,0])cube([kerf,wH*2-kerf,th+2]);
+            translate(startPos+[lH,0,0]) punchHoles(nH,lH,wH,$kerf,edge); 
+            // Lastly take care of the first and last littel $kerf left over on the edge
+            if(edge) translate([-$kerf,-wH+hkerf,-1]+ [lH,0,0])cube([$kerf,wH*2-$kerf,$th+2]);
+            if(edge) translate([(nH*lH*2-lH)-$kerf,-wH+hkerf,-1]+ [lH,0,0])cube([$kerf,wH*2-$kerf,th+2]);
         }
         else if (startCon == 32){
             lH = (length-sW[0]) / (nH*2);
-            translate(startPos + [lH,0,0]) punchHoles(nH,lH,wH,kerf,edge); 
-            // Lastly take care of the first littel kerf left over on the edge
-            if(edge) translate([-kerf,-wH+hkerf,-1] + [lH,0,0])cube([kerf,wH*2-kerf,$th+2]);
+            translate(startPos + [lH,0,0]) punchHoles(nH,lH,wH,$kerf,edge); 
+            // Lastly take care of the first littel $kerf left over on the edge
+            if(edge) translate([-$kerf,-wH+hkerf,-1] + [lH,0,0])cube([$kerf,wH*2-$kerf,$th+2]);
         }
         else if (startCon == 33){
             lH = (length) / (nH*2+1);
-            translate(startPos + [lH,0,0]) punchHoles(nH,lH,wH,kerf,edge);  
-            // Lastly take care of the first littel kerf left over on the edge
-            if(edge) translate([-kerf,-wH+hkerf,-1] + [lH,0,0])cube([kerf,wH*2-kerf,$th+2]);
+            translate(startPos + [lH,0,0]) punchHoles(nH,lH,wH,$kerf,edge);  
+            // Lastly take care of the first littel $kerf left over on the edge
+            if(edge) translate([-$kerf,-wH+hkerf,-1] + [lH,0,0])cube([$kerf,wH*2-$kerf,$th+2]);
         }
         else if(startCon == 44){
             lH = (length) / (nH*2);
-            translate(startPos+[lH/2,0,0]) punchHoles(nH,lH,wH,kerf,edge);
+            translate(startPos+[lH/2,0,0]) punchHoles(nH,lH,wH,$kerf,edge);
         }
         else{
             assert(false, "invalid start condition on fingerjoints");
@@ -173,7 +174,7 @@ module llFingers(startPos, angle, length, nFingers = 0,inverse = false, edge = f
     rotate([0,0,angle]) {
         if(inverse){
             difference(){
-                translate(startPos + [0,-wH+hkerf,-1]) cube([length, wH*2-kerf, $th+2]); 
+                translate(startPos + [0,-wH+hkerf,-1]) cube([length, wH*2-$kerf, $th+2]); 
                     
                 holes();
             }
@@ -186,8 +187,8 @@ module llFingers(startPos, angle, length, nFingers = 0,inverse = false, edge = f
 }
 
 // Hole punching rutine
-module punchHoles(nH,lH,wH,kerf,edge, bumps=false){
-    hkerf=kerf/2;
+module punchHoles(nH,lH,wH,edge, bumps=false){
+    hkerf=$kerf/2;
 
     holeFaces = [
         [0,1,2,3],  // bottom
@@ -198,23 +199,23 @@ module punchHoles(nH,lH,wH,kerf,edge, bumps=false){
         [7,4,0,3]]; // left     
 
     holePoints = [[ hkerf   ,  hkerf    ,     -1 ],  //0
-                  [ lH-kerf ,  hkerf    ,     -1 ],  //1
-                  [ lH-kerf ,  wH-kerf  ,     -1 ],  //2
-                  [ hkerf   ,  wH-kerf  ,     -1 ],  //3
+                  [ lH-$kerf ,  hkerf    ,     -1 ],  //1
+                  [ lH-$kerf ,  wH-$kerf  ,     -1 ],  //2
+                  [ hkerf   ,  wH-$kerf  ,     -1 ],  //3
                   [ hkerf   ,  hkerf    ,  $th+1 ],  //4
-                  [ lH-kerf ,  hkerf    ,  $th+1 ],  //5
-                  [ lH-kerf ,  wH-kerf  ,  $th+1 ],  //6
-                  [ hkerf   ,  wH-kerf  ,  $th+1 ]]; //7
+                  [ lH-$kerf ,  hkerf    ,  $th+1 ],  //5
+                  [ lH-$kerf ,  wH-$kerf  ,  $th+1 ],  //6
+                  [ hkerf   ,  wH-$kerf  ,  $th+1 ]]; //7
     
     // double widths make the rotation easier. 
     edgeHolePoints = [[ hkerf   ,  -wH+hkerf ,     -1 ],  //0
-                      [ lH-kerf ,  -wH+hkerf ,     -1 ],  //1
-                      [ lH-kerf ,  wH-kerf   ,     -1 ],  //2
-                      [ hkerf   ,  wH-kerf   ,     -1 ],  //3
+                      [ lH-$kerf ,  -wH+hkerf ,     -1 ],  //1
+                      [ lH-$kerf ,  wH-$kerf   ,     -1 ],  //2
+                      [ hkerf   ,  wH-$kerf   ,     -1 ],  //3
                       [ hkerf   ,  -wH+hkerf ,  $th+1 ],  //4
-                      [ lH-kerf ,  -wH+hkerf ,  $th+1 ],  //5
-                      [ lH-kerf ,  wH-kerf   ,  $th+1 ],  //6
-                      [ hkerf   ,  wH-kerf   ,  $th+1 ]]; //7
+                      [ lH-$kerf ,  -wH+hkerf ,  $th+1 ],  //5
+                      [ lH-$kerf ,  wH-$kerf   ,  $th+1 ],  //6
+                      [ hkerf   ,  wH-$kerf   ,  $th+1 ]]; //7
 
 
     for(i=[0:nH-1]){ 
@@ -253,16 +254,16 @@ module fingers(angle, start_up, fingers, thickness, range_min, range_max, t_x, t
         for ( p = [ 0 : 1 : fingers-1] )
 		{
 		
-			kerfSize = (p > 0) ? kerf/2 : kerf/2 ;
-			kerfMove = (p > 0) ? kerf/4 : 0;
+			$kerfSize = (p > 0) ? $kerf/2 : $kerf/2 ;
+			$kerfMove = (p > 0) ? $kerf/4 : 0;
 			
 			i=range_min + ((range_max-range_min)/fingers)*p;
             if(start_up == 1) 
             {
 			
-                translate([i-kerfMove,0,0]) 
+                translate([i-$kerfMove,0,0]) 
                 {
-                    cube([ (range_max-range_min)/(fingers*2) + kerfSize, thickness*2, thickness]);
+                    cube([ (range_max-range_min)/(fingers*2) + $kerfSize, thickness*2, thickness]);
                     if(bumps == true)
                     {
                         translate([(range_max-range_min)/(fingers*2), thickness*1.5, 0]) cylinder(h=thickness, r=thickness/10);
@@ -271,9 +272,9 @@ module fingers(angle, start_up, fingers, thickness, range_min, range_max, t_x, t
             }
             else 
             {
-                translate([i+(range_max-range_min)/(fingers*2)-kerfMove,0,0]) 
+                translate([i+(range_max-range_min)/(fingers*2)-$kerfMove,0,0]) 
                 {
-                    cube([ (range_max-range_min)/(fingers*2)+kerfSize, thickness*2, thickness]);
+                    cube([ (range_max-range_min)/(fingers*2)+$kerfSize, thickness*2, thickness]);
                     if(bumps == true)
                     {
                         if (i < (range_max - (range_max-range_min)/fingers ))
