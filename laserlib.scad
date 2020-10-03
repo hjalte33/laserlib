@@ -103,11 +103,7 @@ module llFingers(startPos, angle, length, endPos=[], nFingers = 0,inverse = fals
     hkerf = $kerf/2;
 
     // Sizes for mating cuts on the edge if the first/last tab meets a different thickness material.
-    sW = specialWidths ? specialWidths : [wH,wH];
-
-  
-
-    
+    sW = specialWidths ? specialWidths : [wH,wH];   
 
     module holes(){
 
@@ -143,7 +139,7 @@ module llFingers(startPos, angle, length, endPos=[], nFingers = 0,inverse = fals
             translate([lH,0,0]) punchHoles(nH,lH,wH,edge);
 
             // remove the end littel kerf leftover.
-            if (edge) translate([_length()+hkerf,0]) rotate(180) #punchHoles(1,hkerf*3,wH,true);
+            if (edge) translate([_length()+hkerf,0]) rotate(180) punchHoles(1,$kerf*2,wH,true);
         }
         else if(startCon == [1,1]){          
             lH = (_length()) / (nH*2+1);
@@ -256,7 +252,7 @@ module punchHoles(nH,lH,wH,edge){
 
 
 
-
+//////////////////////////////////////not used below ///////////////////
 
 
 
