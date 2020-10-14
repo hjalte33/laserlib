@@ -8,44 +8,51 @@ $spaceing = 2;     // When flatpacking
 myWidth = 100;
 myDepth = 123;
 myHeight = 145;
-
+shelfHeight = 40;
 
 llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
     // bottom
-    llCutoutSquare(th = th, size=[myWidth,myDepth], pos=[0,0,0]){
-        llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge=true,startCon=[2,0], inverse = false);
-        llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge=true, startCon=[2,2], inverse = false);
-    }
+    
+    llObj([0,0,0],0,th)
+    llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge="r",startCon=[0,0])
+    llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge="l", startCon=[2,2])
+    llCutoutSquare(size=[myWidth,myDepth]);
 
     // front
-    *llCutoutSquare(th = th, size=[myWidth,myHeight],pos=[0,th,0],ang=[90,0,0]){
-        #llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge=true, startCon=[2,0],inverse = true);
-        llFingers(startPos = [0,50,0], angle = 0, length = myWidth,edge=false, startCon=[2,2]);
-        llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge=true, startCon=[2,0]);
-    }
+    llObj([0,th,0],[90,0,0],th)
+        llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge="r", startCon=[0,0], inverse=true)
+            llFingers(startPos = [0,shelfHeight,0], angle = 0, length = myWidth,edge=false, startCon=[1,1])
+                llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge="l", startCon=[1,1])
+                    llCutoutSquare(size=[myWidth,myHeight]){
+                        translate([myWidth/2,myHeight-50]) myBlob();
+                    }
+    
 
     // side1
-    llCutoutSquare(th = th, size=[myHeight,myDepth],pos=[th,0,0],ang=[0,-90,0]){
-        llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge=true, startCon=[0,0]);
-        llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = true, startCon=[0,1]);
-    }
+    llObj([th,0,0],[0,-90,0],th){
+        llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge="r", startCon=[1,1],inverse = true)
+            llFingers(startPos = [shelfHeight,0,0], angle = 90, length = myDepth, startCon=[1,1])
+                llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = "l", startCon=[2,2],inverse=true)
+                    llCutoutSquare(size=[myHeight,myDepth]);
 
-    // test
-    *anotherPice();
-}
-
-module testPice(){
-    llCutoutSquare(th = th,size=[200,200], pos = [0,0], ang = [90,0,0]){
-        fingerjoints(side = LEFT, type = OUTSIDE, count = 5);
-        cutBlob(position = [100,100]){
-            cube([40,40,th]);
+    } 
+    
+    //shelf
+    llObj([0,0,shelfHeight],[0,0,0],th){
+        llFingers(startPos=[0,0], endPos=[myWidth,0],startCon=[1,1],inverse=true,edge="r")
+            llFingers(startPos=[0,0], endPos=[0,myDepth,0],startCon=[1,1],inverse=true, edge="l")
+                llCutoutSquare(size=[myWidth,myDepth]);
+        
+        translate([myWidth-10,myDepth-10]){
+            llFingers(startPos=[0,0],length = 50*sqrt(2) ,angle = 45, startCon=[1,1])
+            cube([50,50,th]);
         }
     }
 }
 
-module anotherPice(){
-    llCutout(th = th, points = [[0,0],[0,100],[100,50],[100,0]], pos = [0,0], ang = [0,0]){
+module myBlob(){
+    for(i=[0:6]){
+        rotate(360/6*i)cube([40,5,th]);
     }
 }
-
 
