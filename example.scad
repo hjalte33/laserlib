@@ -13,23 +13,23 @@ shelfHeight = 40;
 llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
     // bottom
     
-    llObj([0,0,0],0,th)
+    llPos([0,0,0],0,th)
     llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge="r",startCon=[0,0])
     llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge="l", startCon=[2,2])
     llCutoutSquare(size=[myWidth,myDepth]);
 
     // front
-    llObj([0,th,0],[90,0,0],th)
-        llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge="r", startCon=[0,0], inverse=true)
+    llPos([0,th,0],[90,0,0],th)
+        llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge="r", startCon=[1,1])
             llFingers(startPos = [0,shelfHeight,0], angle = 0, length = myWidth,edge=false, startCon=[1,1])
                 llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge="l", startCon=[1,1])
                     llCutoutSquare(size=[myWidth,myHeight]){
-                        translate([myWidth/2,myHeight-50]) myBlob();
+                        translate([myWidth/2,myHeight-50])myBlob();
                     }
     
 
     // side1
-    llObj([th,0,0],[0,-90,0],th){
+    llPos([th,0,0],[0,-90,0],th){
         llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge="r", startCon=[1,1],inverse = true)
             llFingers(startPos = [shelfHeight,0,0], angle = 90, length = myDepth, startCon=[1,1])
                 llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = "l", startCon=[2,2],inverse=true)
@@ -38,7 +38,7 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
     } 
     
     //shelf
-    llObj([0,0,shelfHeight],[0,0,0],th){
+    llPos([0,0,shelfHeight],[0,0,0],th){
         llFingers(startPos=[0,0], endPos=[myWidth,0],startCon=[1,1],inverse=true,edge="r")
             llFingers(startPos=[0,0], endPos=[0,myDepth,0],startCon=[1,1],inverse=true, edge="l")
                 llCutoutSquare(size=[myWidth,myDepth]);
@@ -49,6 +49,8 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
         }
     }
 }
+
+!llClip([0,0,0],0);
 
 module myBlob(){
     for(i=[0:6]){

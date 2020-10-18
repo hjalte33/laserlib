@@ -45,13 +45,13 @@ module llFlatPack(x = 0, sizes=[], spaceing = 2){
             children(i);
         }
     } else{
-        $pos = 0;   // has to be assigned something
+        $pos = 0;   // has to be assigned something so zero will do
         children();
     }
 
 }
 
-module llObj(pos,ang, th){
+module llPos(pos,ang, th){
     pos = $flatPack ? $pos    : pos;
     ang = $flatPack ? [0,0,0] : ang;
     $th = th;   
@@ -88,6 +88,20 @@ module llBlobCut(pos){
         translate(pos)children(0);
     }
 }
+
+module llClip(startPos,angle){
+    difference(){
+        //children()
+        $th = 3;
+        cube([100,100,3]);
+
+        #translate([5,0,0]) 
+            linear_extrude(height = $th )  
+                polygon(points=[[0,0],[0,9*$th],[$th,0 ]]);
+
+    }
+}
+
 
 module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = false, edge = false, startCon = [1,3], holeWidth = 0, specialWidths=[]){
 
@@ -153,8 +167,8 @@ module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = 
                 if (edge) translate([_length()-$kerf-hkerf,0]) punchHoles(1,$kerf*2,wH,edge);
             }
             else if(startCon == [1,1]){          
-                lH = (_length()) / (nH*2+1);
-                translate([lH,0,0])punchHoles(nH,lH,wH,edge);
+                lH = (_length()) / (nH*2-1);
+                translate([lH,0,0])punchHoles(nH-1,lH,wH,edge);
             }
             else if(startCon == [1,2]){          
                 lH = (_length() - sW[1]) / (nH*2-1);
@@ -275,7 +289,62 @@ module punchHoles(nH,lH,wH,edge){
 }
 
 
-
+module llHinge(size_x = 50, 
+               size_y = 100,
+               num_holes_x = 13, 
+               num_holes_y = 3, 
+               mat_x = 2,
+               mat_y = 3,
+               min_hole_x = 1.5, 
+               center=true){
+    
+    difference(){
+        children();
+        h();
+    }    
+    module h(){
+        $fn = 30;
+        ep = 0.00101;
+        v_center=center?-[size_x,size_y,$th]/2:[0,0,0];//a vector for adjusting the center position
+        
+        sum_hole_width = size_x - mat_x*(num_holes_x-1);
+        hw = sum_hole_width/num_holes_x ;
+        hole_width = hw < min_hole_x ? ep : (sum_hole_width/num_holes_x);               
+        mat_x = hw < min_hole_x ? size_x/num_holes_x : mat_x;
+            
+        sum_hole_length = size_y - mat_y*(num_holes_y+1);
+        hole_length = sum_hole_length/(num_holes_y);
+        
+        translate(v_center) difference(){
+            // create a square and cut out a bunch of holes to form the hinge
+            cube([size_x,size_y,$th],center = false);
+            
+            //A hinge with hinges_across_length=2 should look like:
+                // |----------  ------------------  ----------|
+                // |  ------------------  ------------------  |
+                // |----------  ------------------  ----------|
+                // |  ------------------  ------------------  |
+            
+            // go chroug each of the major lines
+            for (x=[0:num_holes_x-1]){
+                translate([x*(mat_x+hole_width) + hole_width/2 ,0,0]){
+                    
+                    // go throug each of the individual cutouts. 
+                    for(y=[0:num_holes_y]){
+                        translate([0,y*(hole_length + mat_y) - (x%2)*(hole_length/2) + mat_y, 0])
+                            
+                            // cutout a hole with nice rounded edges. 
+                            hull(){
+                                cylinder($th, r = hole_width/2);
+                                translate([0,hole_length]) cylinder($th, r = hole_width/2);
+                            };
+                            
+                    }
+                }
+            }        
+        }  
+    }
+}
 
 
 //////////////////////////////////////not used below ///////////////////
