@@ -89,19 +89,77 @@ module llBlobCut(pos){
     }
 }
 
-module llClip(startPos,angle){
+module llClip_old(startPos,angle){
+    mating_thickness = 6;
+    me_thickness = 6;
+    stickout = me_thickness;
+    bend_factor = 9;
+
+    module hole(){
+        linear_extrude(me_thickness)
+            polygon(points=[[me_thickness,0],
+                            [me_thickness*2,me_thickness*bend_factor],
+                            [me_thickness*3+0.1,me_thickness*bend_factor],
+                            [me_thickness*3+0.1,0]]);
+    }
+
     difference(){
         //children()
-        $th = 3;
-        cube([100,100,3]);
-
-        #translate([5,0,0]) 
-            linear_extrude(height = $th )  
-                polygon(points=[[0,0],[0,9*$th],[$th,0 ]]);
-
+        cube([100,100,me_thickness]);
+        hole();
     }
+    translate([0,-mating_thickness,0]) cube([me_thickness,mating_thickness,me_thickness]);
+    linear_extrude(me_thickness) 
+        polygon(points=[[me_thickness*2,-mating_thickness-stickout],
+                        [me_thickness*2,me_thickness*bend_factor],
+                        [me_thickness*3,me_thickness*bend_factor],
+                        [me_thickness*3,-mating_thickness],
+                        [me_thickness*3.75,-mating_thickness],
+                        [me_thickness*3.75,-mating_thickness-1],
+                        [me_thickness*3,-mating_thickness-stickout]]);
 }
 
+module llClip(startPos,angle){
+    mating_thickness = 6;
+    me_thickness = 6;
+    stickout = me_thickness/2;
+    hinge_depth = 2*me_thickness;
+    hinge_length = 2*me_thickness;
+    latch_fraction = 0.3;
+    latch_length = me_thickness*latch_fraction;
+
+    module hole(){
+        linear_extrude(me_thickness)
+            polygon(points=[[me_thickness,0],
+                            [me_thickness,hinge_depth/2-0.1],
+                            [me_thickness-latch_length*2,hinge_depth/2-0.1],
+                            [me_thickness,hinge_depth+0.1],
+                            [hinge_length+me_thickness*2+latch_length,hinge_depth+0.1],
+                            [hinge_length+me_thickness*2+latch_length,0]]);
+    }
+
+    difference(){
+        //children()
+        cube([100,100,me_thickness]);
+        hole();
+    }
+    translate([0,-mating_thickness,0]) cube([me_thickness,mating_thickness,me_thickness]);
+    linear_extrude(me_thickness) 
+        polygon(points=[[me_thickness+latch_length,-mating_thickness-stickout],
+                        [me_thickness-latch_length/2,-mating_thickness-1],
+                        [me_thickness-latch_length/2,-mating_thickness-0.1],
+                        [me_thickness+latch_length,-mating_thickness-0.1],
+                        [me_thickness+latch_length,hinge_depth/2],
+                        [me_thickness-latch_length,hinge_depth/2],
+                        [me_thickness+latch_length,hinge_depth],
+                        [me_thickness*2+latch_length,hinge_depth],
+                        [me_thickness*2+latch_length,-mating_thickness],
+                        [me_thickness*2+latch_length*2,-mating_thickness],
+                        [me_thickness*2+latch_length*2,-mating_thickness-1],
+                        [me_thickness*2+latch_length,-mating_thickness-stickout]]);
+    translate([me_thickness*2+latch_length,0]) 
+        llHinge(size_x = hinge_length,mat_x=0.8,mat_y=1.2, size_y=hinge_depth,num_holes_x = 12.5, num_holes_y = 2, center=false, $th = 6);
+}
 
 module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = false, edge = false, startCon = [1,3], holeWidth = 0, specialWidths=[]){
 
@@ -297,19 +355,26 @@ module llHinge(size_x = 50,
                mat_y = 3,
                min_hole_x = 1.5, 
                center=true){
-    
-    difference(){
-        children();
-        h();
-    }    
+    if ($children){
+        difference(){
+            children();
+            cube([size_x,size_y,$th],center=center);
+        }
+    }
+    h();
+   
     module h(){
         $fn = 30;
-        ep = 0.00101;
+        ep = 0.1;
         v_center=center?-[size_x,size_y,$th]/2:[0,0,0];//a vector for adjusting the center position
         
+        num_holes_x = round(num_holes_x);
+
         sum_hole_width = size_x - mat_x*(num_holes_x-1);
+        // calculate hole width
         hw = sum_hole_width/num_holes_x ;
-        hole_width = hw < min_hole_x ? ep : (sum_hole_width/num_holes_x);               
+        // depending on result set actual hole width and calculate the material thickness between holes.
+        hole_width = hw < min_hole_x ? ep : hw;   
         mat_x = hw < min_hole_x ? size_x/num_holes_x : mat_x;
             
         sum_hole_length = size_y - mat_y*(num_holes_y+1);
@@ -331,12 +396,11 @@ module llHinge(size_x = 50,
                     
                     // go throug each of the individual cutouts. 
                     for(y=[0:num_holes_y]){
-                        translate([0,y*(hole_length + mat_y) - (x%2)*(hole_length/2) + mat_y, 0])
-                            
+                        translate([0,y*(hole_length + mat_y) + mat_y - (x%2)*(hole_length/2+mat_y/2) , 0])   
                             // cutout a hole with nice rounded edges. 
                             hull(){
-                                cylinder($th, r = hole_width/2);
-                                translate([0,hole_length]) cylinder($th, r = hole_width/2);
+                                translate([0,hole_width/2]) cylinder($th, r = hole_width/2);
+                                translate([0,hole_length-hole_width/2]) cylinder($th, r = hole_width/2);
                             };
                             
                     }

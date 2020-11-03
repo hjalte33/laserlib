@@ -50,7 +50,6 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
     }
 }
 
-!llClip([0,0,0],0);
 
 module myBlob(){
     for(i=[0:6]){
