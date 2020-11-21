@@ -24,7 +24,7 @@ function add(v, i = 0, end = 0, r = 0) =
 
 
 /*
-flatPack packs all children elements along the y axis. at a given x offest.
+flatPack packs all children elements along the y axis. at a given x offset.
 The Special valiable $pos instructs all children elements to use that position instead
 of whatever position it might have
 
@@ -80,16 +80,20 @@ module llCutout(th, points = []){
     if($children > 1) children(1);
 }
 
+module llIgnore(){
+    if (! $flatPack){
+        children();
+    }
+}
+
 module llBlobCut(pos){
-    difference(){
-        
-        
+    difference(){       
         children([1:$children-1]);
         translate(pos)children(0);
     }
 }
 
-module llClip_old(startPos,angle){
+module llClip_old(startPos=[0,0,0],angle=0,mirror=false){
     mating_thickness = 6;
     me_thickness = 6;
     stickout = me_thickness;
@@ -102,63 +106,108 @@ module llClip_old(startPos,angle){
                             [me_thickness*3+0.1,me_thickness*bend_factor],
                             [me_thickness*3+0.1,0]]);
     }
-
-    difference(){
-        //children()
-        cube([100,100,me_thickness]);
-        hole();
+    module clip(){
+        translate([0,-mating_thickness,0]) cube([me_thickness,mating_thickness,me_thickness]);
+        linear_extrude(me_thickness) 
+            polygon(points=[[me_thickness*2,-mating_thickness-stickout],
+                            [me_thickness*2,me_thickness*bend_factor],
+                            [me_thickness*3,me_thickness*bend_factor],
+                            [me_thickness*3,-mating_thickness],
+                            [me_thickness*3.75,-mating_thickness],
+                            [me_thickness*3.75,-mating_thickness-1],
+                            [me_thickness*3,-mating_thickness-stickout]]);
     }
-    translate([0,-mating_thickness,0]) cube([me_thickness,mating_thickness,me_thickness]);
-    linear_extrude(me_thickness) 
-        polygon(points=[[me_thickness*2,-mating_thickness-stickout],
-                        [me_thickness*2,me_thickness*bend_factor],
-                        [me_thickness*3,me_thickness*bend_factor],
-                        [me_thickness*3,-mating_thickness],
-                        [me_thickness*3.75,-mating_thickness],
-                        [me_thickness*3.75,-mating_thickness-1],
-                        [me_thickness*3,-mating_thickness-stickout]]);
+
+    if (mirror){
+        offset=[me_thickness*2+stickout,0,0];
+        difference(){
+            children()
+            translate(startPos+offset)rotate([0,0,angle])mirror([1,0,0])hole();
+        }
+        
+        translate(startPos+offset)rotate([0,0,angle]) mirror([1,0,0])clip();
+    }else{
+        difference(){
+            children()
+            translate(startPos)rotate([0,0,angle]) hole();
+        }
+        
+        translate(startPos)rotate([0,0,angle]) clip();
+    }
 }
 
-module llClip(startPos,angle){
-    mating_thickness = 6;
-    me_thickness = 6;
-    stickout = me_thickness/2;
-    hinge_depth = 2*me_thickness;
-    hinge_length = 2*me_thickness;
+module llClipHole(startPos=[0,0,0], angle = 0, mating_thickness = $th, mirror = false){
     latch_fraction = 0.3;
-    latch_length = me_thickness*latch_fraction;
-
-    module hole(){
-        linear_extrude(me_thickness)
-            polygon(points=[[me_thickness,0],
-                            [me_thickness,hinge_depth/2-0.1],
-                            [me_thickness-latch_length*2,hinge_depth/2-0.1],
-                            [me_thickness,hinge_depth+0.1],
-                            [hinge_length+me_thickness*2+latch_length,hinge_depth+0.1],
-                            [hinge_length+me_thickness*2+latch_length,0]]);
-    }
+    latch_length = mating_thickness*latch_fraction;
+    hkerf = $kerf/2;
 
     difference(){
-        //children()
-        cube([100,100,me_thickness]);
-        hole();
+        children();
+        if(mirror){
+            translate(startPos+[-hkerf,hkerf,0])rotate([0,0,angle])mirror([1,0,0])cube([mating_thickness*2+latch_length-$kerf,mating_thickness-$kerf, $th]);
+        }
+        else{
+            translate(startPos+[hkerf,hkerf,0])rotate([0,0,angle])cube([mating_thickness*2+latch_length-$kerf,mating_thickness-$kerf, $th]);
+        }
     }
-    translate([0,-mating_thickness,0]) cube([me_thickness,mating_thickness,me_thickness]);
-    linear_extrude(me_thickness) 
-        polygon(points=[[me_thickness+latch_length,-mating_thickness-stickout],
-                        [me_thickness-latch_length/2,-mating_thickness-1],
-                        [me_thickness-latch_length/2,-mating_thickness-0.1],
-                        [me_thickness+latch_length,-mating_thickness-0.1],
-                        [me_thickness+latch_length,hinge_depth/2],
-                        [me_thickness-latch_length,hinge_depth/2],
-                        [me_thickness+latch_length,hinge_depth],
-                        [me_thickness*2+latch_length,hinge_depth],
-                        [me_thickness*2+latch_length,-mating_thickness],
-                        [me_thickness*2+latch_length*2,-mating_thickness],
-                        [me_thickness*2+latch_length*2,-mating_thickness-1],
-                        [me_thickness*2+latch_length,-mating_thickness-stickout]]);
-    translate([me_thickness*2+latch_length,0]) 
-        llHinge(size_x = hinge_length,mat_x=0.8,mat_y=1.2, size_y=hinge_depth,num_holes_x = 12.5, num_holes_y = 2, center=false, $th = 6);
+
+}
+
+module llClip(startPos = [0,0,0], angle = 0, mating_thickness = $th, mirror = false){
+    stickout = $th/3;
+    hinge_depth = 2*$th;
+    hinge_length = 2*$th;
+    latch_fraction = 0.3;
+    latch_length = $th*latch_fraction;
+
+    module hole(){
+        linear_extrude($th)
+            polygon(points=[[$th,0],
+                            [$th,hinge_depth/2-0.1],
+                            [$th-latch_length*2,hinge_depth/2-0.1],
+                            [$th,hinge_depth+0.1],
+                            [hinge_length+$th*2+latch_length,hinge_depth+0.1],
+                            [hinge_length+$th*2+latch_length,0]]);
+    }
+
+    module clip(){
+        // the clip
+        translate([0,-mating_thickness,0]) cube([$th,mating_thickness,$th]);
+        linear_extrude($th) 
+            polygon(points=[[$th+latch_length,-mating_thickness-stickout],
+                            [$th-latch_length/2,-mating_thickness-1],
+                            [$th-latch_length/2,-mating_thickness-0.1],
+                            [$th+latch_length,-mating_thickness-0.1],
+                            [$th+latch_length,hinge_depth/2],
+                            [$th-latch_length,hinge_depth/2],
+                            [$th+latch_length,hinge_depth],
+                            [$th*2+latch_length,hinge_depth],
+                            [$th*2+latch_length,-mating_thickness],
+                            [$th*2+latch_length*2,-mating_thickness],
+                            [$th*2+latch_length*2,-mating_thickness-1],
+                            [$th*2+latch_length,-mating_thickness-stickout]]);
+        
+        // slight offset the size to make things union correctly
+        translate([$th*2+latch_length-0.005,0]) 
+            llHinge(size_x = hinge_length+0.01,mat_x=0.8,mat_y=1.2, size_y=hinge_depth,num_holes_x = 12.5, num_holes_y = 2, center=false, $th = 6);
+    }
+
+    if (mirror){
+        difference(){
+            children();
+            translate(startPos)rotate([0,0,angle]) mirror([1,0,0])hole();
+        }
+        
+        translate(startPos)rotate([0,0,angle]) mirror([1,0,0])clip();
+    }else{
+        difference(){
+            children();
+            translate(startPos)rotate([0,0,angle]) hole();
+        }
+        
+        translate(startPos)rotate([0,0,angle]) clip();
+    }
+
 }
 
 module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = false, edge = false, startCon = [1,3], holeWidth = 0, specialWidths=[]){
@@ -339,7 +388,7 @@ module punchHoles(nH,lH,wH,edge){
     for(i=[0:nH-1]){ 
         translate([i*lH*2,0]){
             if (edge == "l" || edge == "L") {polyhedron(edgeLeftHolePoints,holeFaces);}
-            if (edge == "r" || edge == "R") {polyhedron(edgeRightHolePoints,holeFaces);}
+            else if (edge == "r" || edge == "R") {polyhedron(edgeRightHolePoints,holeFaces);}
             else {polyhedron(holePoints,holeFaces);}
         }
     }

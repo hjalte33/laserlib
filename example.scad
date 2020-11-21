@@ -10,9 +10,8 @@ myDepth = 123;
 myHeight = 145;
 shelfHeight = 40;
 
-llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
+llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth,myDepth+50,myHeight-shelfHeight]){
     // bottom
-    
     llPos([0,0,0],0,th)
     llFingers(startPos=[0,0,0], angle=0, length=myWidth,edge="r",startCon=[0,0])
     llFingers(startPos=[0,0,0], angle=90, length=myDepth,edge="l", startCon=[2,2])
@@ -41,15 +40,21 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth]){
     llPos([0,0,shelfHeight],[0,0,0],th){
         llFingers(startPos=[0,0], endPos=[myWidth,0],startCon=[1,1],inverse=true,edge="r")
             llFingers(startPos=[0,0], endPos=[0,myDepth,0],startCon=[1,1],inverse=true, edge="l")
-                llCutoutSquare(size=[myWidth,myDepth]);
-        
-        translate([myWidth-10,myDepth-10]){
-            llFingers(startPos=[0,0],length = 50*sqrt(2) ,angle = 45, startCon=[1,1])
-            cube([50,50,th]);
-        }
+                llClipHole(startPos=[myWidth-10,myDepth/2], mirror = true)    
+                    llCutoutSquare(size=[myWidth,myDepth]);
+    }
+
+    // clipin
+    color("red")
+    llPos([th,myDepth/2+th,shelfHeight+th],[90,0,0],th){
+        llClip(startPos=[myWidth-th-10,0,0], angle=0, mirror = true)    
+            llCutoutSquare(size=[myWidth-th,myHeight-shelfHeight-th]);
     }
 }
 
+llIgnore(){
+    translate([30,30,shelfHeight+th])cylinder(r=10,h=20);
+}
 
 module myBlob(){
     for(i=[0:6]){
