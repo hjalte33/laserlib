@@ -68,7 +68,6 @@ module llCutoutSquare(size=[100,100], th=$th){
         if($children > 0 ) children(0);
         if($children > 1) children(1);
     }
-    echo("square", $children);
 }
 
 module llCutout(th, points = []){
@@ -76,7 +75,6 @@ module llCutout(th, points = []){
         linear_extrude(height = th , center = false)  polygon(points=points);
         children(0);
     }
-    echo("cutout", $children);
     if($children > 1) children(1);
 }
 
@@ -210,7 +208,7 @@ module llClip(startPos = [0,0,0], angle = 0, mating_thickness = $th, mirror = fa
 
 }
 
-module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = false, edge = false, startCon = [1,3], holeWidth = 0, specialWidths=[]){
+module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0, edge = false, startCon = [1,3], holeWidth = 0, specialWidths=[]){
 
     difference(){
         children(0);
@@ -266,6 +264,15 @@ module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = 
                 // remove the end cutout
                 if (edge) translate([_length()-sW[1],0]) punchHoles(1,sW[1]+hkerf,wH,edge);
             }
+            else if(startCon == [0,3]){
+                // remove the first little kerf leftover
+                if(edge) translate([-hkerf,0,0]) punchHoles(1,hkerf*3,wH,edge);
+                
+                lH = (_length() - sW[1]) / (nH*2-1);
+                punchHoles(nH,lH,wH,edge);
+
+          
+            }
             else if(startCon == [1,0]){
                 lH = _length()/(nH*2);
                 translate([lH,0,0]) punchHoles(nH,lH,wH,edge);
@@ -283,6 +290,10 @@ module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = 
 
                 // remove the end cutout
                 if (edge) translate([_length()-sW[1],0]) punchHoles(1,sW[1]+hkerf,wH,edge);
+            }
+            else if(startCon == [1,3]){          
+                lH = (_length() - sW[1]) / (nH*2-2);
+                translate([lH,0,0]) punchHoles(nH-1,lH,wH,edge);
             }
             else if(startCon == [2,0]){
                 // remove the first little kerf leftover
@@ -312,28 +323,45 @@ module llFingers(startPos, endPos=[], angle=0, length=0, nFingers = 0,inverse = 
                 // remove the end cutout
                 if (edge) translate([_length()-sW[1],0]) punchHoles(1,sW[1]+hkerf,wH,edge);           
             }
+            else if(startCon == [2,3]){
+                // remove the first little kerf leftover
+                if(edge) translate([-hkerf,0,0]) punchHoles(1,sW[0]+hkerf,wH,edge);
+                
+                lH = (_length()-sW[0]-sW[1])/(nH*2-2);
+                translate([sW[0]+lH,0,0]) punchHoles(nH-1,lH,wH,edge);          
+            }
+            else if(startCon == [3,0]){
+                lH = (_length()-sW[0])/(nH*2-1);
+                translate([sW[0],0,0]) punchHoles(nH,lH,wH,edge);
+
+                // remove the end cutout
+                if (edge) translate([_length()-sW[1],0]) punchHoles(1,sW[1]+hkerf,wH,edge);           
+            }
+            else if(startCon == [3,1]){
+                lH = (_length()-sW[0])/(nH*2-2);
+                translate([sW[0],0,0]) punchHoles(nH-1,lH,wH,edge);
+        
+            }
+            else if(startCon == [3,2]){
+                lH = (_length()-sW[0]-sW[1])/(nH*2-2);
+                translate([sW[0],0,0]) punchHoles(nH-1,lH,wH,edge);
+
+                // remove the end cutout
+                if (edge) translate([_length()-sW[1],0]) punchHoles(1,sW[1]+hkerf,wH,edge);           
+            }
+            else if(startCon == [3,3]){
+               
+                lH = (_length()-sW[0]-sW[1])/(nH*2-3);
+                translate([sW[0],0,0]) punchHoles(nH-1,lH,wH,edge);          
+            }
             else{
                 assert(false, "invalid start condition on fingerjoints");
             }
             
         }
 
-        translate(startPos)rotatePoint(_angle(),[wH/2,wH/2,0]) {
-            if(inverse){     
-                render(2)difference(){
-                    if(edge == "l" || edge == "L")
-                    translate([0,hkerf,0]) cube([_length(), wH, $th]); 
-                    else if (edge == "r" || edge == "R")
-                    cube([_length(), wH-hkerf, $th]); 
-                    else 
-                    translate([0,hkerf,0]) cube([_length(), wH-$kerf, $th]); 
-                    
-                    holes();
-                }
-            } else{
-                holes();
-            }
-        }
+        translate(startPos)rotatePoint(_angle(),[wH/2,wH/2,0]) holes();
+            
     }    
 
 }

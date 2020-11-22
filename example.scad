@@ -20,8 +20,8 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth,myDepth+50,myHeight-shelfHeig
     // front
     llPos([0,th,0],[90,0,0],th)
         llFingers(startPos = [0,0,0], endPos=[myWidth,0,0],edge="r", startCon=[1,1])
-            llFingers(startPos = [0,shelfHeight,0], angle = 0, length = myWidth,edge=false, startCon=[1,1])
-                llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge="l", startCon=[1,1])
+            llFingers(startPos=[0,0,0], angle=90,length=myHeight,edge="l", startCon=[1,1])
+                llFingers(startPos = [0,shelfHeight,0], angle = 0, length = myWidth, startCon=[1,1])
                     llCutoutSquare(size=[myWidth,myHeight]){
                         translate([myWidth/2,myHeight-50])myBlob();
                     }
@@ -29,17 +29,17 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth,myDepth+50,myHeight-shelfHeig
 
     // side1
     llPos([th,0,0],[0,-90,0],th){
-        llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge="r", startCon=[1,1],inverse = true)
+        llFingers(startPos=[0,0,0], angle=0, length = myHeight, edge="r", startCon=[0,0])
             llFingers(startPos = [shelfHeight,0,0], angle = 90, length = myDepth, startCon=[1,1])
-                llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = "l", startCon=[2,2],inverse=true)
+                llFingers(startPos=[0,0,0], angle=90, length = myDepth, edge = "l", startCon=[3,3])
                     llCutoutSquare(size=[myHeight,myDepth]);
 
     } 
     
     //shelf
-    llPos([0,0,shelfHeight],[0,0,0],th){
-        llFingers(startPos=[0,0], endPos=[myWidth,0],startCon=[1,1],inverse=true,edge="r")
-            llFingers(startPos=[0,0], endPos=[0,myDepth,0],startCon=[1,1],inverse=true, edge="l")
+    #llPos([0,0,shelfHeight],[0,0,0],th){
+        llFingers(startPos=[0,0], endPos=[myWidth,0],startCon=[0,0],edge="r")
+            llFingers(startPos=[0,0], endPos=[0,myDepth,0],startCon=[0,0], edge="l")
                 llClipHole(startPos=[myWidth-10,myDepth/2], mirror = true)    
                     llCutoutSquare(size=[myWidth,myDepth]);
     }
@@ -52,8 +52,15 @@ llFlatPack(x = 0 , sizes=[myDepth,myHeight,myDepth,myDepth+50,myHeight-shelfHeig
     }
 }
 
+llFlatPack(x = myWidth+2, sizes=[myDepth,myDepth]){
+    llPos([myWidth+5,0,0],[0,0,0],th)
+        llFingers(startPos=[0,0,0], angle=0, length=myWidth,startCon=[2,0], edge="r")
+        llFingers(startPos=[0,myDepth-th,0], angle=0, length=myWidth,startCon=[3,1], edge="l")
+        llCutoutSquare([myWidth,myDepth]);
+}
+
 llIgnore(){
-    translate([30,30,shelfHeight+th])cylinder(r=10,h=20);
+    *translate([30,30,shelfHeight+th])cylinder(r=10,h=20);
 }
 
 module myBlob(){
