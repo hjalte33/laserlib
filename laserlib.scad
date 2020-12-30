@@ -92,7 +92,7 @@ module llCutoutSquare(size=[100,100], th=$th){
 
 module llCutout(th, points = []){
     difference(){
-        linear_extrude(height = th , center = false)  polygon(points=points);
+        linear_extrude(height = th , center = false)offset(delta=$kerf/2)polygon(points=points);
         translate([0,0,-1])scale([1,1,2])children();
     }
 }
