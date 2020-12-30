@@ -179,12 +179,12 @@ module llClip(startPos = [0,0,0], angle = 0, mating_thickness = $th, mirror = fa
 
     module hole(){
         linear_extrude($th)
-            polygon(points=[[$th,0],
+            polygon(points=[[$th,-$kerf],
                             [$th,hinge_depth/2-0.1],
                             [$th-latch_length*2,hinge_depth/2-0.1],
                             [$th,hinge_depth+0.1],
                             [hinge_length+$th*2+latch_length,hinge_depth+0.1],
-                            [hinge_length+$th*2+latch_length,0]]);
+                            [hinge_length+$th*2+latch_length,-$kerf]]);
     }
 
     module clip(){
@@ -205,25 +205,25 @@ module llClip(startPos = [0,0,0], angle = 0, mating_thickness = $th, mirror = fa
                             [$th*2+latch_length,-mating_thickness-stickout]]);
         
         // slight offset the size to make things union correctly
-        translate([$th*2+latch_length-0.005,0]) 
-            llHinge(size_x = hinge_length+0.01,mat_x=0.8,mat_y=1.2, size_y=hinge_depth,num_holes_x = 12.5, num_holes_y = 2, center=false, $th = 6);
+        translate([$th*2+latch_length-0.005,-$kerf/2]) 
+            llHinge(size_x = hinge_length+0.01,mat_x=0.8,mat_y=1.2, size_y=hinge_depth+$kerf/2,num_holes_x = 12.5, num_holes_y = 2, center=false, $th = thickness);
     }
 
-    if (mirror){
-        difference(){
-            children();
-            translate(startPos)rotate([0,0,angle]) mirror([1,0,0])hole();
+        if (mirror){
+            difference(){
+                children();
+                translate(startPos)rotate([0,0,angle]) mirror([1,0,0])hole();
+            }
+            
+            translate(startPos)rotate([0,0,angle]) mirror([1,0,0])clip();
+        }else{
+            difference(){
+                children();
+                translate(startPos)rotate([0,0,angle]) hole();
+            }
+            
+            translate(startPos)rotate([0,0,angle]) clip();
         }
-        
-        translate(startPos)rotate([0,0,angle]) mirror([1,0,0])clip();
-    }else{
-        difference(){
-            children();
-            translate(startPos)rotate([0,0,angle]) hole();
-        }
-        
-        translate(startPos)rotate([0,0,angle]) clip();
-    }
 
 }
 
